@@ -296,6 +296,7 @@ class JsonFormatter:
     def format(self, record) -> str:  # pragma: no cover
         import datetime
         import json
+
         from wolvcapital.middleware import get_request_id  # avoid circular
 
         rid = get_request_id()
