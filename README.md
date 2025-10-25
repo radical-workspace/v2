@@ -1,3 +1,5 @@
+# [![CI](https://github.com/radical-workspace/v2/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/radical-workspace/v2/actions/workflows/ci.yml)
+
 # WolvCapital - Professional Investment Platform
 
 WolvCapital is a Django 5 investment platform where every financial action requires human oversight. Automated services calculate returns and enforce business rules, while administrators approve or reject all transactions and investments.
@@ -5,21 +7,25 @@ WolvCapital is a Django 5 investment platform where every financial action requi
 ## Key Features
 
 ### Manual Off-Chain Approvals
+
 - Deposits, withdrawals, and investments remain pending until an administrator verifies them.
 - Service-layer functions require an `admin_user`, ensuring audit trails and accountability.
 - All approval decisions are stored in `AdminAuditLog` with reference identifiers.
 
 ### Investment Management
+
 - Four predefined investment plans with fixed ROI ranges and durations.
 - Wallet balances update atomically after approvals to prevent inconsistent states.
 - Dashboards show wallet history, active plans, and recent transactions.
 
 ### Security and Compliance
+
 - Email-only authentication via django-allauth and synchronized staff roles.
 - Legal agreements, privacy policies, and risk disclosures stored as versioned content.
 - Structured logging with request correlation identifiers aids forensic reviews.
 
 ### Administrative Tooling
+
 - Enhanced Django Admin configuration with bulk approval actions and filters.
 - REST API endpoints for both user and admin workflows.
 - Management commands to seed data, promote admins, and process ROI payouts.
@@ -38,6 +44,7 @@ WolvCapital is a Django 5 investment platform where every financial action requi
 ### Local Development
 
 1. **Clone and Install**
+
    ```bash
    git clone <repository-url>
    cd solid-succotash
@@ -45,21 +52,29 @@ WolvCapital is a Django 5 investment platform where every financial action requi
    venv\Scripts\activate  # Use source venv/bin/activate on macOS/Linux
    pip install -r requirements.txt
    ```
+
 2. **Configure Environment**
+
    ```bash
    copy .env.example .env
    # Populate .env with local settings and secrets
    ```
+
 3. **Bootstrap Database**
+
    ```bash
    python manage.py migrate
    python manage.py seed_plans
    ```
+
 4. **Create an Administrator**
+
    ```bash
    python manage.py createsuperuser
    ```
+
 5. **Run the Server**
+
    ```bash
    python manage.py runserver
    ```
@@ -72,6 +87,7 @@ Visit `http://localhost:8000` to access the dashboard. Promote additional admins
 2. Set required environment variables (`SECRET_KEY`, `DATABASE_URL`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, etc.) in the Render dashboard.
 3. Deploy using the provided `render.yaml` or Dockerfile.
 4. After the first deploy, run the setup commands via the Render shell:
+
    ```bash
    python manage.py migrate
    python manage.py seed_plans
@@ -115,9 +131,11 @@ Run `python manage.py seed_plans` whenever the `InvestmentPlan` table is empty t
 ## API Overview
 
 ### Public
+
 - `GET /api/plans/`
 
 ### Authenticated User
+
 - `GET /api/investments/`
 - `POST /api/investments/`
 - `GET /api/transactions/`
@@ -125,6 +143,7 @@ Run `python manage.py seed_plans` whenever the `InvestmentPlan` table is empty t
 - `GET /api/wallet/`
 
 ### Administrator
+
 - `GET /api/admin/transactions/`
 - `POST /api/admin/transactions/{id}/approve/`
 - `POST /api/admin/transactions/{id}/reject/`
@@ -135,12 +154,14 @@ Run `python manage.py seed_plans` whenever the `InvestmentPlan` table is empty t
 ## Business Rules
 
 ### Approval Lifecycle
+
 1. Users submit deposit, withdrawal, or investment requests.
 2. Administrators review the request via Django Admin or the admin API.
 3. Approval triggers service logic that updates balances and schedules payouts.
 4. Rejections persist admin notes and maintain audit logs without altering funds.
 
 ### Transaction Flow
+
 - **Deposits**: Approved deposits credit the user wallet atomically.
 - **Withdrawals**: Services confirm the requested amount before debiting the wallet.
 - **Investments**: Approval locks capital, assigns plan dates, and schedules ROI accrual.
@@ -165,6 +186,7 @@ All operations run inside `transaction.atomic()` blocks to guarantee consistency
 ## Testing
 
 Run the suite locally to validate models, services, and API endpoints:
+
 ```bash
 python manage.py test
 ```
@@ -196,7 +218,7 @@ python manage.py test
 - Admin site: `/admin/`
 - Health check: `/healthz/`
 - Legal agreements are versioned through the `Agreement` model with SHA256 hashing.
-- Contact: support@wolvcapital.com
+- Contact: <support@wolvcapital.com>
 
 ## License and Contributions
 
