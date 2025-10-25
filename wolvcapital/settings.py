@@ -29,6 +29,7 @@ SECRET_KEY = os.getenv(
     "SECRET_KEY",
     "wolvcapital-secure-2025-k8j9#mN2$pQ7!vX3&bR6@wE9*tY5^hU8%fG4+cZ1-nA0=sD7~lM3",
 )
+# TODO: In production set SECRET_KEY via environment variable and avoid using this default value.
 
 # Render-provided values
 RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")
@@ -134,8 +135,16 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
+    # The allauth AccountMiddleware is optional. We attempt to add it below only if it's
+    # available to avoid import errors when allauth isn't installed or doesn't expose it.
 ]
+
+# Ensure allauth's AccountMiddleware is present when allauth is enabled.
+# allauth's AppConfig enforces this middleware; add it here if allauth is installed.
+if "allauth" in INSTALLED_APPS:
+    mw_path = "allauth.account.middleware.AccountMiddleware"
+    if mw_path not in MIDDLEWARE:
+        MIDDLEWARE.append(mw_path)
 
 # ------------------------------------------------------------------
 # Database (Postgres in prod, SQLite locally)
@@ -274,7 +283,8 @@ if not SENDGRID_API_KEY:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     # Light signal in logs; avoid printing full secrets
-    print(f"✅ SendGrid configured (key starts with: {SENDGRID_API_KEY[:10]}...)")
+    # Avoid printing key fragments to logs in production; only indicate configuration.
+    print("✅ SendGrid configured")
 
 # ------------------------------------------------------------------
 # I18N / TZ
@@ -304,7 +314,8 @@ class JsonFormatter:
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
-            "time": datetime.datetime.now(datetime.UTC).isoformat(),
+            # use timezone.utc (datetime.UTC does not exist and raises AttributeError)
+            "time": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         }
         if rid:
             data["request_id"] = rid
@@ -337,9 +348,11 @@ LOGGING = {
 # ------------------------------------------------------------------
 # Security (production)
 # ------------------------------------------------------------------
-SECURE_SSL_REDIRECT = not DEBUG and not IN_CODESPACES and "pytest" not in " ".join(sys.argv)
-SESSION_COOKIE_SECURE = not DEBUG and not IN_CODESPACES
-CSRF_COOKIE_SECURE = not DEBUG and not IN_CODESPACES
+# In testing we must avoid forcing HTTPS/cookie secure flags as the test client
+# uses plain HTTP. Respect the TESTING flag to prevent redirects during tests.
+SECURE_SSL_REDIRECT = not DEBUG and not IN_CODESPACES and not TESTING
+SESSION_COOKIE_SECURE = not DEBUG and not IN_CODESPACES and not TESTING
+CSRF_COOKIE_SECURE = not DEBUG and not IN_CODESPACES and not TESTING
 
 SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000"))  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -351,7 +364,7 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_BROWSER_XSS_FILTER = True
 
 # Cookie security
-CSRF_COOKIE_HTTPONLY = True      # keep cookie unreadable to JS (safer)
+CSRF_COOKIE_HTTPONLY = False  # allow JS (if needed) to read csrftoken for AJAX; set True only if no JS needs it
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
