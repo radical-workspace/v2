@@ -1,3 +1,6 @@
+      - name: Strict static asset check
+        run: |
+          python tools/check_static_strict.py
 name: CI
 
 on:
@@ -41,8 +44,11 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Check static manifest integrity
+        run: |
+          python tools/check_static_manifest.py
 
       # Optional: avoid staticfiles warning
       - name: Prepare staticfiles dir
