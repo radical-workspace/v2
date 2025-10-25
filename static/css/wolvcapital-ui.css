@@ -1,0 +1,10 @@
+/* Minimal UI utilities placeholder */
+.btn {
+    padding: .5rem 1rem;
+    border-radius: .375rem;
+}
+
+.btn-primary {
+    background: #1e40af;
+    color: #fff;
+}

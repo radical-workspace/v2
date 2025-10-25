@@ -1,0 +1,9 @@
+/* Minimal dark theme placeholder */
+body.dark-mode {
+    background-color: #0b1220;
+    color: #e6eef8;
+}
+
+.dark-card {
+    background: #0f1724;
+}

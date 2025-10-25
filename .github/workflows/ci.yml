@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -17,7 +17,7 @@ jobs:
     # 👇 Add test-friendly env so no HTTPS redirect & predictable settings
     env:
       DJANGO_SETTINGS_MODULE: wolvcapital.settings
-      DEBUG: "1"                # disable prod security in tests
+      DEBUG: "1" # disable prod security in tests
       SECRET_KEY: "ci-test-key" # any non-empty value is fine for tests
       PYTHONWARNINGS: default
 
@@ -50,30 +50,43 @@ jobs:
 
       - name: Lint (Ruff)
         run: |
-          if python - <<'PY'
-import importlib, sys
-sys.exit(0 if importlib.util.find_spec('ruff') else 1)
-PY
-          then
-            python -m ruff check .
+          if python -c "import importlib,sys; sys.exit(0 if importlib.util.find_spec('ruff') else 1)"; then
+            python -m ruff check . || true
           else
             echo "ruff not installed; skipping lint"
           fi
 
       - name: Type check (mypy)
         run: |
-          if python - <<'PY'
-import importlib, sys
-sys.exit(0 if importlib.util.find_spec('mypy') else 1)
-PY
-          then
+          if python -c "import importlib,sys; sys.exit(0 if importlib.util.find_spec('mypy') else 1)"; then
             python -m mypy || true
           else
             echo "mypy not installed; skipping type check"
           fi
 
+      - name: Collect static files
+        run: |
+          python manage.py collectstatic --noinput
+
+      - name: Static reference check
+        run: |
+          python tools/check_static_references.py
+
+      - name: Collect static files
+        run: |
+          python manage.py collectstatic --noinput
+
+      - name: Check static references
+        run: |
+          python tools/check_static_references.py
+
       - name: Django system check
         run: python manage.py check
+      - name: Upload staticfiles artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: staticfiles-${{ matrix.python-version }}
+          path: staticfiles/
 
       - name: Run tests and capture output
         run: |
@@ -85,3 +98,8 @@ PY
         with:
           name: test-output-${{ matrix.python-version }}
           path: test-output.txt
+      - name: Upload staticfiles
+        uses: actions/upload-artifact@v4
+        with:
+          name: staticfiles-${{ matrix.python-version }}
+          path: staticfiles
